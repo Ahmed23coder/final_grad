@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:developer' as developer;
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:briefly/src/domain/repositories/news_repository.dart';
@@ -28,12 +30,12 @@ class ArticleCubit extends Cubit<ArticleState> {
 
       _isTtsInitialized = true;
     } catch (e) {
-      // ignore: avoid_print
-      print("TTS Init Error: $e");
+      developer.log('TTS init failed', name: 'tts', error: e);
     }
   }
 
   void _onParagraphComplete() {
+    if (isClosed) return;
     if (state.article != null && state.isPlaying) {
       final paragraphs = state.article!.content.split('\n\n');
       if (state.currentParagraphIndex < paragraphs.length - 1) {
@@ -51,7 +53,15 @@ class ArticleCubit extends Cubit<ArticleState> {
         article: initialArticle,
         clearError: true,
       ));
-      _repository.addToReadingHistory(initialArticle);
+      unawaited(
+        _repository.addToReadingHistory(initialArticle).catchError((Object e) {
+          developer.log(
+            'addToReadingHistory failed',
+            name: 'article',
+            error: e,
+          );
+        }),
+      );
       return;
     }
 
@@ -63,11 +73,20 @@ class ArticleCubit extends Cubit<ArticleState> {
         isLoading: false,
         article: article,
       ));
-      _repository.addToReadingHistory(article);
-    } catch (e) {
+      unawaited(
+        _repository.addToReadingHistory(article).catchError((Object e) {
+          developer.log(
+            'addToReadingHistory failed',
+            name: 'article',
+            error: e,
+          );
+        }),
+      );
+    } catch (e, st) {
+      developer.log('Article load failed', name: 'article', error: e, stackTrace: st);
       emit(state.copyWith(
         isLoading: false,
-        error: e.toString(),
+        error: 'Failed to load article. Please try again.',
       ));
     }
   }
@@ -174,8 +193,13 @@ class ArticleCubit extends Cubit<ArticleState> {
   }
 
   @override
-  Future<void> close() {
-    _stopReading();
+  Future<void> close() async {
+    _flutterTts.setCompletionHandler(() {});
+    try {
+      await _flutterTts.stop();
+    } catch (e) {
+      developer.log('TTS stop failed on close', name: 'tts', error: e);
+    }
     return super.close();
   }
 }

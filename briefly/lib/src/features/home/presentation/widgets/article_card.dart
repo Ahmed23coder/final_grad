@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -54,8 +55,9 @@ class ArticleCard extends StatelessWidget {
                   color: Colors.grey.withValues(alpha: 0.1),
                   image: thumbnailUrl != null && thumbnailUrl!.isNotEmpty
                       ? DecorationImage(
-                          image: NetworkImage(thumbnailUrl!),
+                          image: CachedNetworkImageProvider(thumbnailUrl!),
                           fit: BoxFit.cover,
+                          onError: (_, __) {},
                         )
                       : null,
                 ),

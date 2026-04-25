@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -95,12 +96,10 @@ class _HomeScreenContentState extends State<_HomeScreenContent> {
                     ),
 
                     // Right: Bell with Red Dot
-                    BlocBuilder<NotificationsCubit, NotificationsState>(
-                      builder: (context, state) {
-                        final bool hasUnread =
-                            state is NotificationsLoaded &&
-                            state.unreadCount > 0;
-
+                    BlocSelector<NotificationsCubit, NotificationsState, bool>(
+                      selector: (state) =>
+                          state is NotificationsLoaded && state.unreadCount > 0,
+                      builder: (context, hasUnread) {
                         return Stack(
                           clipBehavior: Clip.none,
                           children: [
@@ -250,10 +249,12 @@ class _HomeScreenContentState extends State<_HomeScreenContent> {
                     return SliverList(
                       delegate: SliverChildListDelegate([
                         // 2.5 Greeting
-                        BlocBuilder<ProfileCubit, ProfileState>(
-                          builder: (context, profileState) {
-                            final name = profileState.profile.name;
-                            final displayName = name.isNotEmpty ? name : 'Friend';
+                        BlocSelector<ProfileCubit, ProfileState, String>(
+                          selector: (s) =>
+                              s.profile.name.isNotEmpty
+                                  ? s.profile.name
+                                  : 'Friend',
+                          builder: (context, displayName) {
                             return Padding(
                               padding: EdgeInsets.symmetric(
                                 horizontal: context.scaleWidth(20),
@@ -263,7 +264,7 @@ class _HomeScreenContentState extends State<_HomeScreenContent> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'Good morning, $displayName',
+                                    '${_greeting()}, $displayName',
                                     style: AppTextStyles.h2(context).copyWith(
                                       fontSize: context.scaleFontSize(24),
                                       fontWeight: FontWeight.w700,
@@ -303,10 +304,11 @@ class _HomeScreenContentState extends State<_HomeScreenContent> {
                                 color: AppColors.secondarySurface,
                                 image: featuredArticle.thumbnailUrl != null
                                     ? DecorationImage(
-                                        image: NetworkImage(
+                                        image: CachedNetworkImageProvider(
                                           featuredArticle.thumbnailUrl!,
                                         ),
                                         fit: BoxFit.cover,
+                                        onError: (_, __) {},
                                       )
                                     : null,
                               ),
@@ -516,10 +518,12 @@ class _HomeScreenContentState extends State<_HomeScreenContent> {
                                             color: AppColors.secondarySurface,
                                             image: article.thumbnailUrl != null
                                                 ? DecorationImage(
-                                                    image: NetworkImage(
-                                                      article.thumbnailUrl!,
-                                                    ),
+                                                    image:
+                                                        CachedNetworkImageProvider(
+                                                          article.thumbnailUrl!,
+                                                        ),
                                                     fit: BoxFit.cover,
+                                                    onError: (_, __) {},
                                                   )
                                                 : null,
                                           ),
@@ -724,9 +728,4 @@ class _CircularIconButton extends StatelessWidget {
         child: Icon(
           icon,
           color: AppColors.foreground,
-          size: context.scaleWidth(20),
-        ),
-      ),
-    );
-  }
-}
+          size: co

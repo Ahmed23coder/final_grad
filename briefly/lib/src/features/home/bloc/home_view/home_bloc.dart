@@ -1,6 +1,9 @@
+import 'dart:developer' as developer;
+
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../../domain/repositories/news_repository.dart';
+
 import '../../../../domain/models/news_article.dart';
+import '../../../../domain/repositories/news_repository.dart';
 import 'home_event.dart';
 import 'home_state.dart';
 
@@ -18,61 +21,42 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   ) async {
     emit(state.copyWith(isLoading: true, clearError: true));
 
-    try {
-      final category = state.selectedCategory;
-      
-      // Sequential fetching with small delays and independent error handling
-      NewsArticle? featured;
-      try {
-        featured = await _newsRepository.fetchFeaturedArticle(category: category);
-      } catch (e) {
-        // ignore: avoid_print
-        print('HomeBloc: Featured load fail: $e');
-      }
-      
-      await Future.delayed(const Duration(milliseconds: 300));
-      
-      List<NewsArticle> trending = [];
-      try {
-        trending = await _newsRepository.fetchTrendingArticles(category: category);
-      } catch (e) {
-        // ignore: avoid_print
-        print('HomeBloc: Trending load fail: $e');
-      }
+    final category = state.selectedCategory;
 
-      await Future.delayed(const Duration(milliseconds: 300));
-      
-      List<NewsArticle> hotTopics = [];
-      try {
-        hotTopics = await _newsRepository.fetchHotTopics(category: category);
-      } catch (e) {
-        // ignore: avoid_print
-        print('HomeBloc: HotTopics load fail: $e');
-      }
-      
-      emit(
-        state.copyWith(
-          isLoading: false,
-          featured: featured,
-          trending: trending,
-          hotTopics: hotTopics,
-          // Only show error if we got absolutely nothing
-          error: (featured == null && trending.isEmpty && hotTopics.isEmpty) 
-              ? 'Failed to load feed. Please check your connection.' 
-              : null,
-        ),
-      );
-    } catch (e) {
-      emit(
-        state.copyWith(
-          isLoading: false,
-          error: e.toString(),
-          clearFeatured: true,
-          trending: const [],
-          hotTopics: const [],
-        ),
-      );
-    }
+    final results = await Future.wait<Object?>([
+      _newsRepository.fetchFeaturedArticle(category: category).catchError((
+        Object e,
+      ) {
+        developer.log('Featured load failed', name: 'home', error: e);
+        return null;
+      }),
+      _newsRepository.fetchTrendingArticles(category: category).catchError((
+        Object e,
+      ) {
+        developer.log('Trending load failed', name: 'home', error: e);
+        return <NewsArticle>[];
+      }),
+      _newsRepository.fetchHotTopics(category: category).catchError((Object e) {
+        developer.log('HotTopics load failed', name: 'home', error: e);
+        return <NewsArticle>[];
+      }),
+    ]);
+
+    final featured = results[0] as NewsArticle?;
+    final trending = (results[1] as List).cast<NewsArticle>();
+    final hotTopics = (results[2] as List).cast<NewsArticle>();
+
+    emit(
+      state.copyWith(
+        isLoading: false,
+        featured: featured,
+        trending: trending,
+        hotTopics: hotTopics,
+        error: (featured == null && trending.isEmpty && hotTopics.isEmpty)
+            ? 'Failed to load feed. Please check your connection.'
+            : null,
+      ),
+    );
   }
 
   void _onSelectCategory(SelectCategory event, Emitter<HomeState> emit) {

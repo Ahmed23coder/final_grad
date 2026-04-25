@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -133,7 +134,8 @@ class _ProfileCard extends StatelessWidget {
               ),
               image: DecorationImage(
                 image: profile.avatarUrl.isNotEmpty
-                    ? NetworkImage(profile.avatarUrl) as ImageProvider
+                    ? CachedNetworkImageProvider(profile.avatarUrl)
+                          as ImageProvider
                     : const AssetImage(AppAssets.placeholderAvatar),
                 fit: BoxFit.cover,
               ),
