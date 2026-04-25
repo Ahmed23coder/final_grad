@@ -1,0 +1,48 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+
+        {
+            "name": "Briefly (debug)",
+            "type": "dart",
+            "request": "launch",
+            "program": "briefly/lib/main.dart",
+            "cwd": "briefly"
+        },
+        {
+            "name": "briefly",
+            "cwd": "briefly",
+            "request": "launch",
+            "type": "dart",
+            "program": "lib/main.dart"
+        },
+        {
+            "name": "briefly (Supabase from file)",
+            "cwd": "briefly",
+            "request": "launch",
+            "type": "dart",
+            "program": "lib/main.dart",
+            "toolArgs": ["--dart-define-from-file",
+            "supabase.json"]
+        },
+        {
+            "name": "briefly (profile mode)",
+            "cwd": "briefly",
+            "request": "launch",
+            "type": "dart",
+            "program": "lib/main.dart",
+            "flutterMode": "profile"
+        },
+        {
+            "name": "briefly (release mode)",
+            "cwd": "briefly",
+            "request": "launch",
+            "type": "dart",
+            "program": "lib/main.dart",
+            "flutterMode": "release"
+        }
+    ]
+}
