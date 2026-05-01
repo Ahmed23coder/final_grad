@@ -27,13 +27,15 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
   late final Animation<double> _glowOpacity;
   late final Animation<double> _loadingWidth;
 
+  bool _hasNavigated = false;
+
   @override
   void initState() {
     super.initState();
 
     _introCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2400),
+      duration: const Duration(milliseconds: 1600),
     );
 
     // Logo Fade and Scale
@@ -90,33 +92,34 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
     // Progress Bar Sweep
     _loadingCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1500),
+      duration: const Duration(milliseconds: 1200),
     );
     _loadingWidth = Tween<double>(
       begin: 0.0,
       end: 1.0,
     ).animate(CurvedAnimation(parent: _loadingCtrl, curve: Curves.easeInOut));
 
-    // Trigger animations
-    _introCtrl.forward();
+    // Trigger animations. Navigate as soon as the intro animation finishes
+    // (or after a hard 2.5s ceiling, whichever comes first) — instead of
+    // waiting on a fixed delay, which felt like a freeze on cold-start
+    // debug builds.
+    _introCtrl.forward().whenComplete(_goNext);
     _loadingCtrl.forward();
-
     _glowCtrl.repeat(reverse: true);
 
-    Future.delayed(const Duration(seconds: 4), () {
-      if (mounted) _glowCtrl.stop();
-    });
-
-    _navigateToNextScreen();
+    // Safety net: if for any reason the intro controller never completes,
+    // navigate anyway after a hard timeout.
+    Future.delayed(const Duration(milliseconds: 2500), _goNext);
   }
 
-  Future<void> _navigateToNextScreen() async {
-    await Future.delayed(const Duration(milliseconds: 3500));
-    if (!mounted) return;
+  void _goNext() {
+    if (_hasNavigated || !mounted) return;
+    _hasNavigated = true;
     try {
       context.go(AppRouter.bootstrap);
     } catch (e, stack) {
-      await showDialog<void>(
+      // Surface routing errors instead of silently freezing the splash.
+      showDialog<void>(
         context: context,
         builder: (ctx) => AlertDialog(
           title: const Text('Navigation Error'),

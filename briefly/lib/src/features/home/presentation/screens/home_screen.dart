@@ -10,7 +10,9 @@ import '../../../../core/widgets/press_scale_animation.dart';
 import '../../../../core/utils/responsive_util.dart';
 import '../../../../core/utils/category_colors.dart';
 import '../../../../core/routes/app_router.dart';
+import '../../../../core/utils/ui_feedback.dart';
 import '../../../../domain/models/hot_topic_filter.dart';
+import '../../../../domain/models/news_article.dart';
 import '../../../../domain/repositories/news_repository.dart';
 import '../../bloc/home_view/home_bloc.dart';
 import '../../bloc/home_view/home_event.dart';
@@ -18,6 +20,8 @@ import '../../bloc/home_view/home_state.dart';
 import '../../../notifications/cubits/notifications_cubit.dart';
 import '../../../notifications/cubits/notifications_state.dart';
 import '../widgets/article_card.dart';
+import '../widgets/home_skeleton.dart';
+import '../widgets/trending_carousel.dart';
 import '../../../profile/cubits/profile_cubit.dart';
 import '../../../profile/cubits/profile_state.dart';
 
@@ -237,7 +241,8 @@ class _HomeScreenContentState extends State<_HomeScreenContent> {
                 builder: (context, state) {
                   if (state.isLoading) {
                     return const SliverFillRemaining(
-                      child: Center(child: CircularProgressIndicator()),
+                      hasScrollBody: false,
+                      child: HomeSkeleton(),
                     );
                   }
                   if (state.error != null) {
@@ -259,8 +264,13 @@ class _HomeScreenContentState extends State<_HomeScreenContent> {
                   }
 
                   final featuredArticle = state.featured;
-                  final carouselArticles = state.trending.take(3).toList();
+                  final carouselArticles = state.trending.take(8).toList();
                   final hotTopicArticles = state.hotTopics.take(5).toList();
+
+                  void saveAndConfirm(NewsArticle a) {
+                    context.read<NewsRepository>().saveArticle(a);
+                    UiFeedback.showSnack(context, 'Saved to your vault.');
+                  }
 
                     return SliverList(
                       delegate: SliverChildListDelegate([
@@ -383,28 +393,31 @@ class _HomeScreenContentState extends State<_HomeScreenContent> {
                                                 ),
                                           ),
                                         ),
-                                        ClipRRect(
-                                          borderRadius: BorderRadius.circular(
-                                            50,
-                                          ),
-                                          child: BackdropFilter(
-                                            filter: ImageFilter.blur(
-                                              sigmaX: 4,
-                                              sigmaY: 4,
+                                        GestureDetector(
+                                          onTap: () =>
+                                              saveAndConfirm(featuredArticle),
+                                          child: ClipRRect(
+                                            borderRadius: BorderRadius.circular(
+                                              50,
                                             ),
-                                            child: Container(
-                                              width: context.scaleWidth(32),
-                                              height: context.scaleWidth(32),
-                                              decoration: BoxDecoration(
-                                                color: Colors.black.withValues(
-                                                  alpha: 0.30,
-                                                ),
-                                                shape: BoxShape.circle,
+                                            child: BackdropFilter(
+                                              filter: ImageFilter.blur(
+                                                sigmaX: 4,
+                                                sigmaY: 4,
                                               ),
-                                              child: Icon(
-                                                LucideIcons.bookmark,
-                                                color: Colors.white,
-                                                size: context.scaleWidth(14),
+                                              child: Container(
+                                                width: context.scaleWidth(32),
+                                                height: context.scaleWidth(32),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.black
+                                                      .withValues(alpha: 0.30),
+                                                  shape: BoxShape.circle,
+                                                ),
+                                                child: Icon(
+                                                  LucideIcons.bookmark,
+                                                  color: Colors.white,
+                                                  size: context.scaleWidth(14),
+                                                ),
                                               ),
                                             ),
                                           ),
@@ -493,130 +506,11 @@ class _HomeScreenContentState extends State<_HomeScreenContent> {
 
                       // 4. Trending Carousel
                       if (carouselArticles.isNotEmpty)
-                        SizedBox(
-                          height: context.scaleHeight(200),
-                          child: ScrollConfiguration(
-                            behavior: ScrollConfiguration.of(
-                              context,
-                            ).copyWith(overscroll: false),
-                            child: ListView.separated(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: context.scaleWidth(20),
-                              ),
-                              scrollDirection: Axis.horizontal,
-                              physics: const BouncingScrollPhysics(),
-                              itemCount: carouselArticles.length,
-                              separatorBuilder: (_, __) =>
-                                  SizedBox(width: context.scaleWidth(12)),
-                              itemBuilder: (context, index) {
-                                final article = carouselArticles[index];
-                                return PressScaleAnimation(
-                                  onTap: () => context.push(
-                                    '/article/${article.id}',
-                                    extra: article,
-                                  ),
-                                  child: SizedBox(
-                                    width: context.scaleWidth(144),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Container(
-                                          height: context.scaleHeight(96),
-                                          width: double.infinity,
-                                          decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(
-                                              16,
-                                            ),
-                                            border: Border.all(
-                                              color: Colors.white.withValues(
-                                                alpha: 0.08,
-                                              ),
-                                            ),
-                                            color: AppColors.secondarySurface,
-                                            image: article.thumbnailUrl != null
-                                                ? DecorationImage(
-                                                    image:
-                                                        CachedNetworkImageProvider(
-                                                          article.thumbnailUrl!,
-                                                        ),
-                                                    fit: BoxFit.cover,
-                                                    onError: (_, __) {},
-                                                  )
-                                                : null,
-                                          ),
-                                        ),
-                                        SizedBox(
-                                          height: context.scaleHeight(8),
-                                        ),
-                                        Text(
-                                          article.title,
-                                          style: AppTextStyles.h2(context)
-                                              .copyWith(
-                                                fontSize: context.scaleFontSize(
-                                                  12,
-                                                ),
-                                                color: Colors.white,
-                                              ),
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                        SizedBox(
-                                          height: context.scaleHeight(4),
-                                        ),
-                                        Row(
-                                          children: [
-                                            Text(
-                                              article.source,
-                                              style:
-                                                  AppTextStyles.caption(
-                                                    context,
-                                                  ).copyWith(
-                                                    color: AppColors.accentBlue,
-                                                    fontSize: context
-                                                        .scaleFontSize(9),
-                                                  ),
-                                            ),
-                                            Padding(
-                                              padding: EdgeInsets.symmetric(
-                                                horizontal: context.scaleWidth(
-                                                  4,
-                                                ),
-                                              ),
-                                              child: CircleAvatar(
-                                                radius: 1,
-                                                backgroundColor: AppColors
-                                                    .silverPlaceholder
-                                                    .withValues(alpha: 0.3),
-                                              ),
-                                            ),
-                                            Expanded(
-                                              child: Text(
-                                                article.timeAgo,
-                                                style:
-                                                    AppTextStyles.caption(
-                                                      context,
-                                                    ).copyWith(
-                                                      color: AppColors
-                                                          .silverPlaceholder
-                                                          .withValues(
-                                                            alpha: 0.3,
-                                                          ),
-                                                      fontSize: context
-                                                          .scaleFontSize(9),
-                                                    ),
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
+                        TrendingCarousel(
+                          articles: carouselArticles,
+                          onArticleTap: (article) => context.push(
+                            '/article/${article.id}',
+                            extra: article,
                           ),
                         ),
 
@@ -710,6 +604,7 @@ class _HomeScreenContentState extends State<_HomeScreenContent> {
                                   extra: article,
                                 );
                               },
+                              onBookmarkTap: () => saveAndConfirm(article),
                             ),
                           ),
                         ),

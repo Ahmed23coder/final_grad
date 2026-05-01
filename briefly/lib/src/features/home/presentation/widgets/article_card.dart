@@ -15,6 +15,13 @@ class ArticleCard extends StatelessWidget {
   final VoidCallback onTap;
   final bool isFlat;
 
+  /// Whether the bookmark icon should render in the "saved" filled state.
+  final bool isSaved;
+
+  /// Tap callback for the bookmark icon. When null, the icon is shown but
+  /// inert (matches the original read-only behavior).
+  final VoidCallback? onBookmarkTap;
+
   const ArticleCard({
     super.key,
     required this.title,
@@ -24,6 +31,8 @@ class ArticleCard extends StatelessWidget {
     this.thumbnailUrl,
     required this.onTap,
     this.isFlat = false,
+    this.isSaved = false,
+    this.onBookmarkTap,
   });
 
   @override
@@ -123,9 +132,9 @@ class ArticleCard extends StatelessWidget {
               ),
               if (isFlat) ...[
                 SizedBox(width: context.scaleWidth(8)),
-                Icon(
-                  LucideIcons.bookmark,
-                  color: Colors.white.withValues(alpha: 0.2),
+                _BookmarkButton(
+                  isSaved: isSaved,
+                  onTap: onBookmarkTap,
                   size: context.scaleWidth(18),
                 ),
               ],
@@ -133,6 +142,45 @@ class ArticleCard extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _BookmarkButton extends StatelessWidget {
+  final bool isSaved;
+  final VoidCallback? onTap;
+  final double size;
+
+  const _BookmarkButton({
+    required this.isSaved,
+    required this.onTap,
+    required this.size,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = isSaved
+        ? AppColors.primaryAccent
+        : Colors.white.withValues(alpha: 0.25);
+    final icon = AnimatedSwitcher(
+      duration: const Duration(milliseconds: 180),
+      transitionBuilder: (child, anim) =>
+          ScaleTransition(scale: anim, child: child),
+      child: Icon(
+        // Lucide doesn't ship a separate filled bookmark — fake "filled" by
+        // bumping color saturation and using the same glyph.
+        LucideIcons.bookmark,
+        key: ValueKey(isSaved),
+        color: color,
+        size: size,
+      ),
+    );
+
+    if (onTap == null) return icon;
+    return InkResponse(
+      onTap: onTap,
+      radius: size,
+      child: Padding(padding: const EdgeInsets.all(4), child: icon),
     );
   }
 }
