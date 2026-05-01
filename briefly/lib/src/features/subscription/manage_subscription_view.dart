@@ -73,7 +73,7 @@ class ManageSubscriptionView extends StatelessWidget {
   Widget _buildHeroCard(BuildContext context, ManageSubscriptionViewModel vm) {
     return Column(
       children: [
-        SubHeroBanner(
+        const SubHeroBanner(
           title: 'Premium Monthly',
           subtitle: 'Active since Jan 15, 2025',
           icon: LucideIcons.crown,
@@ -226,7 +226,7 @@ class ManageSubscriptionView extends StatelessWidget {
                   ),
                   child: Row(
                     children: [
-                      Icon(
+                      const Icon(
                         LucideIcons.circleCheck,
                         size: 16,
                         color: Color(0xFF4ade80),
@@ -618,7 +618,7 @@ class _CancelBottomSheetState extends State<_CancelBottomSheet> {
             ),
           ),
           alignment: Alignment.center,
-          child: Icon(
+          child: const Icon(
             LucideIcons.circleCheck,
             size: 36,
             color: Color(0xFFf59e0b),

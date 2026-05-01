@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:briefly/src/core/routes/app_router.dart';
+import 'package:briefly/src/core/utils/ui_feedback.dart';
 import '../../cubits/privacy_security/privacy_security_cubit.dart';
 import '../../cubits/privacy_security/privacy_security_state.dart';
 
@@ -224,13 +225,13 @@ class _SecurityStatusBanner extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  const Text(
                     'Account Secured',
                     style: TextStyle(
                       fontFamily: 'Inter',
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
-                      color: const Color(0xFF6EE7B7),
+                      color: Color(0xFF6EE7B7),
                     ),
                   ),
                   Text(
@@ -251,11 +252,11 @@ class _SecurityStatusBanner extends StatelessWidget {
                 borderRadius: BorderRadius.circular(50),
                 border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.25)),
               ),
-              child: Text(
+              child: const Text(
                 'Good',
                 style: TextStyle(
                   fontSize: 10,
-                  color: const Color(0xFF6EE7B7),
+                  color: Color(0xFF6EE7B7),
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -612,7 +613,10 @@ class _SectionB extends StatelessWidget {
                   label: 'Blocked Accounts',
                   sublabel: '0 accounts blocked',
                   rightWidget: const _ChevronRight(),
-                  onTap: () {},
+                  onTap: () => UiFeedback.showSnack(
+                    context,
+                    'You have not blocked any accounts.',
+                  ),
                 ),
               ],
             ),
@@ -659,7 +663,10 @@ class _SectionC extends StatelessWidget {
                   label: 'Download My Data',
                   sublabel: 'Request a copy of your data',
                   rightWidget: const _ChevronRight(),
-                  onTap: () {},
+                  onTap: () => UiFeedback.showSnack(
+                    context,
+                    'Data export requested. We will email you when it is ready.',
+                  ),
                 ),
               ],
             ),
@@ -699,7 +706,21 @@ class _SectionD extends StatelessWidget {
               sublabel: 'Temporarily disable your account',
               isDanger: true,
               rightWidget: const _ChevronRight(isDanger: true),
-              onTap: () {},
+              onTap: () async {
+                final confirmed = await UiFeedback.confirmDestructive(
+                  context,
+                  title: 'Deactivate Account?',
+                  message:
+                      'Your account will be temporarily disabled. You can reactivate it any time by signing in again.',
+                  confirmLabel: 'Deactivate',
+                );
+                if (confirmed && context.mounted) {
+                  UiFeedback.showSnack(
+                    context,
+                    'Account deactivation requested.',
+                  );
+                }
+              },
             ),
             _RowItem(
               icon: LucideIcons.trash2,

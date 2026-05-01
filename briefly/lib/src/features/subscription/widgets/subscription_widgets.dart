@@ -951,11 +951,11 @@ class TermsCheckbox extends StatelessWidget {
           SizedBox(width: context.scaleWidth(14)),
           Expanded(
             child: Text.rich(
-              TextSpan(
+              const TextSpan(
                 children: [
-                  const TextSpan(text: 'I agree to the '),
+                  TextSpan(text: 'I agree to the '),
                   TextSpan(text: 'Terms of Service', style: TextStyle(color: AppColors.primaryAccent, fontWeight: FontWeight.w600)),
-                  const TextSpan(text: ' and acknowledge the '),
+                  TextSpan(text: ' and acknowledge the '),
                   TextSpan(text: 'Privacy Policy', style: TextStyle(color: AppColors.primaryAccent, fontWeight: FontWeight.w600)),
                 ],
               ),
@@ -1040,9 +1040,9 @@ class FormSubmitButton extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (isLoading)
-              SpinningIcon(icon: LucideIcons.loader, size: 18, color: AppColors.primaryForeground, period: const Duration(seconds: 1))
+              const SpinningIcon(icon: LucideIcons.loader, size: 18, color: AppColors.primaryForeground, period: Duration(seconds: 1))
             else if (isActuallyEnabled)
-              Icon(LucideIcons.check, size: 18, color: AppColors.primaryForeground),
+              const Icon(LucideIcons.check, size: 18, color: AppColors.primaryForeground),
             if (isLoading || isActuallyEnabled) SizedBox(width: context.scaleWidth(12)),
             Text(
               isLoading ? 'Processing...' : label,

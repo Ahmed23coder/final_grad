@@ -8,6 +8,7 @@ import 'package:briefly/src/core/theme/app_text_styles.dart';
 import 'package:briefly/src/core/theme/app_radius.dart';
 import 'package:briefly/src/core/utils/responsive_util.dart';
 import 'package:briefly/src/core/utils/app_animations.dart';
+import 'package:briefly/src/core/utils/ui_feedback.dart';
 
 import '../../cubits/app_settings/app_settings_cubit.dart';
 import '../../cubits/app_settings/app_settings_state.dart';
@@ -169,9 +170,9 @@ class AppSettingsScreen extends StatelessWidget {
                           delay: const Duration(milliseconds: 100),
                           slideOffset: 10.0,
                           child: _buildGroupCard([
-                            SettingsRow(
+                            const SettingsRow(
                               icon: LucideIcons.globe,
-                              iconColor: const Color(0xFFC0C0C0),
+                              iconColor: Color(0xFFC0C0C0),
                               label: 'App Language',
                               subLabel: 'Selection will restart the app',
                             ),
@@ -221,7 +222,10 @@ class AppSettingsScreen extends StatelessWidget {
                                   iconColor: const Color(0xFFC0C0C0),
                                   label: 'Feed Refresh Rate',
                                   subLabel: 'Check for updates periodically',
-                                  onTap: () {}, // Chevron trailing automatically added
+                                  onTap: () => UiFeedback.showSnack(
+                                    context,
+                                    'Pick a refresh interval below.',
+                                  ),
                                 ),
                               ]),
                               SizedBox(height: context.scaleHeight(12)),
@@ -459,7 +463,10 @@ class AppSettingsScreen extends StatelessWidget {
             ),
           ),
           PressScaleAnimation(
-             onTap: () {},
+             onTap: () => UiFeedback.showSnack(
+               context,
+               'You are on the latest version.',
+             ),
              child: Container(
                padding: EdgeInsets.symmetric(
                  horizontal: context.scaleWidth(16),

@@ -357,10 +357,10 @@ class RestorePurchasesView extends StatelessWidget {
             delay: const Duration(milliseconds: 100),
             child: Row(
               children: [
-                Icon(
+                const Icon(
                   LucideIcons.circleCheck,
                   size: 14,
-                  color: const Color(0xFF4ade80),
+                  color: Color(0xFF4ade80),
                 ),
                 SizedBox(width: context.scaleWidth(8)),
                 Text(
@@ -427,10 +427,10 @@ class RestorePurchasesView extends StatelessWidget {
                   ),
                 ),
                 alignment: Alignment.center,
-                child: Icon(
+                child: const Icon(
                   LucideIcons.circleX,
                   size: 40,
-                  color: const Color(0xFF64748b),
+                  color: Color(0xFF64748b),
                 ),
               ),
             ),
@@ -491,10 +491,10 @@ class RestorePurchasesView extends StatelessWidget {
                   ),
                 ),
                 alignment: Alignment.center,
-                child: Icon(
+                child: const Icon(
                   LucideIcons.circleCheck,
                   size: 40,
-                  color: const Color(0xFF4ade80),
+                  color: Color(0xFF4ade80),
                 ),
               ),
             ),

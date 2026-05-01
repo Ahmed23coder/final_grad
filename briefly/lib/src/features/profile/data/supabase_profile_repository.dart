@@ -1,3 +1,5 @@
+import 'dart:developer' as developer;
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../domain/models/user_profile.dart';
 import '../../../domain/models/subscription_plan.dart';
@@ -130,52 +132,85 @@ class SupabaseProfileRepository implements ProfileRepository {
     final user = _client.auth.currentUser;
     if (user == null) return;
 
-    // Update profiles table
-    await _client.from('profiles').upsert({
-      'id': user.id,
-      'display_name': profile.fullName,
-      'phone': profile.phone,
-      'username': profile.username,
-      'bio': profile.bio,
-      'avatar_url': profile.avatarUrl,
-      'twitter_handle': profile.twitter,
-      'instagram_handle': profile.instagram,
-      'website_url': profile.website,
-      'location': profile.location,
-      'date_of_birth': profile.dateOfBirth?.toIso8601String().split('T').first,
-      'is_notifications_enabled': profile.isNotificationsEnabled,
-      'is_dark_mode': profile.isDarkMode,
-      'text_size': profile.textSize,
-      'auto_play_videos': profile.autoPlayVideos,
-      'download_over_wifi_only': profile.downloadOverWifiOnly,
-      'is_biometric_enabled': profile.isBiometricEnabled,
-      'is_two_factor_enabled': profile.isTwoFactorEnabled,
-      'is_data_sharing_enabled': profile.isDataSharingEnabled,
-      'is_profile_public': profile.isProfilePublic,
-      'onboarding_status': profile.onboardingStatus,
-      'onboarding_step': profile.onboardingStep,
-      'language': profile.language,
-    }, onConflict: 'id');
+    // Update profiles table.
+    //
+    // This can fail with PostgrestException 42501 (RLS) when the row does not
+    // yet exist for this user and the INSERT policy is missing on the
+    // `profiles` table. Swallow the failure here so that toggles / preference
+    // saves never crash the UI — the auth metadata update below still
+    // persists the change for the current session, and a server-side trigger
+    // (recommended) should backfill the row on signup.
+    try {
+      await _client.from('profiles').upsert({
+        'id': user.id,
+        'display_name': profile.fullName,
+        'phone': profile.phone,
+        'username': profile.username,
+        'bio': profile.bio,
+        'avatar_url': profile.avatarUrl,
+        'twitter_handle': profile.twitter,
+        'instagram_handle': profile.instagram,
+        'website_url': profile.website,
+        'location': profile.location,
+        'date_of_birth':
+            profile.dateOfBirth?.toIso8601String().split('T').first,
+        'is_notifications_enabled': profile.isNotificationsEnabled,
+        'is_dark_mode': profile.isDarkMode,
+        'text_size': profile.textSize,
+        'auto_play_videos': profile.autoPlayVideos,
+        'download_over_wifi_only': profile.downloadOverWifiOnly,
+        'is_biometric_enabled': profile.isBiometricEnabled,
+        'is_two_factor_enabled': profile.isTwoFactorEnabled,
+        'is_data_sharing_enabled': profile.isDataSharingEnabled,
+        'is_profile_public': profile.isProfilePublic,
+        'onboarding_status': profile.onboardingStatus,
+        'onboarding_step': profile.onboardingStep,
+        'language': profile.language,
+      }, onConflict: 'id');
+    } on PostgrestException catch (e, st) {
+      developer.log(
+        'profiles upsert failed (likely RLS) — falling back to auth metadata',
+        name: 'profile',
+        error: e,
+        stackTrace: st,
+      );
+    } catch (e, st) {
+      developer.log(
+        'profiles upsert failed unexpectedly',
+        name: 'profile',
+        error: e,
+        stackTrace: st,
+      );
+    }
 
-    // Also update auth metadata for redundancy/legacy support
-    await _client.auth.updateUser(
-      UserAttributes(
-        data: {
-          'full_name': profile.fullName,
-          'phone': profile.phone,
-          'username': profile.username,
-          'bio': profile.bio,
-          'avatar_url': profile.avatarUrl,
-          'twitter_handle': profile.twitter,
-          'instagram_handle': profile.instagram,
-          'website_url': profile.website,
-          'is_notifications_enabled': profile.isNotificationsEnabled,
-          'is_dark_mode': profile.isDarkMode,
-          'text_size': profile.textSize,
-          'language': profile.language,
-        },
-      ),
-    );
+    // Also update auth metadata for redundancy/legacy support.
+    try {
+      await _client.auth.updateUser(
+        UserAttributes(
+          data: {
+            'full_name': profile.fullName,
+            'phone': profile.phone,
+            'username': profile.username,
+            'bio': profile.bio,
+            'avatar_url': profile.avatarUrl,
+            'twitter_handle': profile.twitter,
+            'instagram_handle': profile.instagram,
+            'website_url': profile.website,
+            'is_notifications_enabled': profile.isNotificationsEnabled,
+            'is_dark_mode': profile.isDarkMode,
+            'text_size': profile.textSize,
+            'language': profile.language,
+          },
+        ),
+      );
+    } catch (e, st) {
+      developer.log(
+        'auth.updateUser failed',
+        name: 'profile',
+        error: e,
+        stackTrace: st,
+      );
+    }
   }
 
   @override

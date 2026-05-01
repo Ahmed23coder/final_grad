@@ -9,7 +9,7 @@ import 'package:briefly/src/core/utils/app_animations.dart';
 import 'package:briefly/src/core/utils/responsive_util.dart';
 import '../../cubits/edit/edit_profile_cubit.dart';
 import '../../cubits/edit/edit_profile_state.dart';
-import 'package:briefly/src/core/constants/app_assets.dart';
+import 'package:briefly/src/core/widgets/avatar_fallback.dart';
 
 class EditProfileScreen extends StatelessWidget {
   const EditProfileScreen({super.key});
@@ -196,20 +196,19 @@ class _AvatarSection extends StatelessWidget {
           Stack(
             clipBehavior: Clip.none,
             children: [
-              Container(
-                width: context.scaleWidth(96), // w-24
-                height: context.scaleWidth(96), // h-24
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: const Color(0xFFC0C0C0).withValues(alpha: 0.3), // 2px solid silver/30
-                    width: 2,
-                  ),
-                  image: const DecorationImage(
-                    image: AssetImage(AppAssets.placeholderAvatar),
-                    fit: BoxFit.cover,
-                  ),
-                ),
+              BlocBuilder<EditProfileCubit, EditProfileState>(
+                buildWhen: (a, b) =>
+                    a.fullName != b.fullName || a.email != b.email,
+                builder: (context, state) {
+                  return AvatarFallback(
+                    name: state.fullName.isNotEmpty
+                        ? state.fullName
+                        : state.email,
+                    size: context.scaleWidth(96),
+                    borderColor:
+                        const Color(0xFFC0C0C0).withValues(alpha: 0.3),
+                  );
+                },
               ),
               // Camera Button
               Positioned(

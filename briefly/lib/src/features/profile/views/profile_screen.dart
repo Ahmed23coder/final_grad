@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -12,7 +11,7 @@ import 'package:briefly/src/core/utils/responsive_util.dart';
 import 'package:briefly/src/core/routes/app_router.dart';
 import '../cubits/profile_cubit.dart';
 import '../cubits/profile_state.dart';
-import '../../../core/constants/app_assets.dart';
+import 'package:briefly/src/core/widgets/avatar_fallback.dart';
 import 'package:briefly/src/domain/models/user_profile.dart';
 
 /// Clean Profile screen matching the explicit design system rules.
@@ -52,12 +51,12 @@ class ProfileScreen extends StatelessWidget {
                     SizedBox(height: context.scaleHeight(32)),
 
                     // 4ï¸âƒ£ Preferences Section
-                    _SectionTitle(title: 'PREFERENCES'),
+                    const _SectionTitle(title: 'PREFERENCES'),
                     _PreferencesGroup(state: state),
                     SizedBox(height: context.scaleHeight(32)),
 
                     // 5ï¸âƒ£ Account Section
-                    _SectionTitle(title: 'ACCOUNT'),
+                    const _SectionTitle(title: 'ACCOUNT'),
                     _AccountGroup(),
                     SizedBox(height: context.scaleHeight(32)),
 
@@ -123,23 +122,13 @@ class _ProfileCard extends StatelessWidget {
       child: Column(
         children: [
           // Avatar
-          Container(
-            width: context.scaleWidth(80),
-            height: context.scaleWidth(80),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: AppColors.primaryAccent.withValues(alpha: 0.3),
-                width: 2,
-              ),
-              image: DecorationImage(
-                image: profile.avatarUrl.isNotEmpty
-                    ? CachedNetworkImageProvider(profile.avatarUrl)
-                          as ImageProvider
-                    : const AssetImage(AppAssets.placeholderAvatar),
-                fit: BoxFit.cover,
-              ),
-            ),
+          AvatarFallback(
+            avatarUrl: profile.avatarUrl,
+            name: profile.fullName.isNotEmpty
+                ? profile.fullName
+                : profile.email,
+            size: context.scaleWidth(80),
+            borderColor: AppColors.primaryAccent.withValues(alpha: 0.3),
           ),
           SizedBox(height: context.scaleHeight(16)),
 

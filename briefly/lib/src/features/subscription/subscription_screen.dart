@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../profile/cubits/subscription/subscription_cubit.dart';
 import '../profile/cubits/subscription/subscription_state.dart';
+import '../../core/routes/app_router.dart';
 import '../../domain/models/plan_type.dart';
 
 class SubscriptionScreen extends StatelessWidget {
@@ -190,9 +191,9 @@ class _CurrentPlanBadge extends StatelessWidget {
           color: const Color(0xFFC0C0C0).withValues(alpha: 0.2),
         ),
       ),
-      child: Row(
+      child: const Row(
         mainAxisSize: MainAxisSize.min,
-        children: const [
+        children: [
           Icon(LucideIcons.crown, size: 16, color: Color(0xFFC0C0C0)),
           SizedBox(width: 8),
           Text(
@@ -483,7 +484,12 @@ class _ActionButtons extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: TextButton(
-              onPressed: () {},
+              onPressed: () {
+                final route = (state.selectedPlan == state.activePlan)
+                    ? AppRouter.subscriptionManage
+                    : AppRouter.subscriptionUpgrade;
+                context.push(route);
+              },
               style: TextButton.styleFrom(
                 backgroundColor: const Color(0xFFC0C0C0),
                 shape: RoundedRectangleBorder(
@@ -504,7 +510,7 @@ class _ActionButtons extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           TextButton(
-            onPressed: () {},
+            onPressed: () => context.push(AppRouter.restore),
             child: Text(
               'Restore Purchases',
               style: TextStyle(
@@ -550,8 +556,8 @@ class _UsageStats extends StatelessWidget {
               borderRadius: BorderRadius.circular(28),
               border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
             ),
-            child: Column(
-              children: const [
+            child: const Column(
+              children: [
                 _UsageRow(
                   icon: LucideIcons.sparkles,
                   label: 'AI Summaries',

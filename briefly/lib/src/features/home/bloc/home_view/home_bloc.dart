@@ -8,6 +8,8 @@ import 'home_event.dart';
 import 'home_state.dart';
 
 class HomeBloc extends Bloc<HomeEvent, HomeState> {
+  static const _fetchTimeout = Duration(seconds: 12);
+
   final NewsRepository _newsRepository;
 
   HomeBloc(this._newsRepository) : super(const HomeState()) {
@@ -23,36 +25,72 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
     final category = state.selectedCategory;
 
-    final results = await Future.wait<Object?>([
-      _newsRepository.fetchFeaturedArticle(category: category).catchError((
-        Object e,
-      ) {
-        developer.log('Featured load failed', name: 'home', error: e);
-        return null;
-      }),
-      _newsRepository.fetchTrendingArticles(category: category).catchError((
-        Object e,
-      ) {
-        developer.log('Trending load failed', name: 'home', error: e);
-        return <NewsArticle>[];
-      }),
-      _newsRepository.fetchHotTopics(category: category).catchError((Object e) {
-        developer.log('HotTopics load failed', name: 'home', error: e);
-        return <NewsArticle>[];
-      }),
-    ]);
+    // fetchFeaturedArticle and fetchTrendingArticles hit the same edge-function
+    // endpoint (action=fetchArticles, type=reg). Make one call, derive both,
+    // and run hot-topics (type=hot) in parallel.
+    Future<List<NewsArticle>> safeRegArticles() async {
+      try {
+        return await _newsRepository
+            .fetchTrendingArticles(category: category)
+            .timeout(_fetchTimeout);
+      } catch (e, st) {
+        developer.log(
+          'Trending/Featured load failed',
+          name: 'home',
+          error: e,
+          stackTrace: st,
+        );
+        return const [];
+      }
+    }
 
-    final featured = results[0] as NewsArticle?;
-    final trending = (results[1] as List).cast<NewsArticle>();
-    final hotTopics = (results[2] as List).cast<NewsArticle>();
+    Future<List<NewsArticle>> safeHotTopics() async {
+      try {
+        return await _newsRepository
+            .fetchHotTopics(category: category)
+            .timeout(_fetchTimeout);
+      } catch (e, st) {
+        developer.log(
+          'HotTopics load failed',
+          name: 'home',
+          error: e,
+          stackTrace: st,
+        );
+        return const [];
+      }
+    }
+
+    final results = await Future.wait([safeRegArticles(), safeHotTopics()]);
+    final regArticles = results[0];
+    final hotTopics = results[1];
+
+    final featured = regArticles.isNotEmpty ? regArticles.first : null;
+    // The featured article is rendered separately as the hero card. Drop it
+    // from the trending carousel so the same story doesn't appear twice.
+    final trending = regArticles.length > 1
+        ? regArticles.sublist(1)
+        : const <NewsArticle>[];
+
+    // De-duplicate hot topics by title so multiple wire-service reposts of the
+    // same story collapse into one row (e.g. Business Insider + Yahoo both
+    // running the identical headline). Keep the first occurrence (highest-
+    // ranked source).
+    final seenTitles = <String>{};
+    final dedupedHotTopics = <NewsArticle>[];
+    for (final article in hotTopics) {
+      final key = article.title.trim().toLowerCase();
+      if (seenTitles.add(key)) dedupedHotTopics.add(article);
+    }
 
     emit(
       state.copyWith(
         isLoading: false,
         featured: featured,
         trending: trending,
-        hotTopics: hotTopics,
-        error: (featured == null && trending.isEmpty && hotTopics.isEmpty)
+        hotTopics: dedupedHotTopics,
+        clearFeatured: featured == null,
+        error:
+            (featured == null && trending.isEmpty && dedupedHotTopics.isEmpty)
             ? 'Failed to load feed. Please check your connection.'
             : null,
       ),

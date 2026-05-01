@@ -36,7 +36,7 @@ class PrimaryButton extends StatelessWidget {
         borderRadius: AppRadius.button,
       ),
       child: isLoading
-          ? SizedBox(
+          ? const SizedBox(
               width: 20,
               height: 20,
               child: CircularProgressIndicator(

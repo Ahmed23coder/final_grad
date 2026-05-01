@@ -9,6 +9,7 @@ import 'package:briefly/src/core/routes/app_router.dart';
 import 'package:briefly/src/core/mvvm/view_model_builder.dart';
 import 'package:briefly/src/core/utils/app_animations.dart';
 import 'package:briefly/src/core/utils/responsive_util.dart';
+import 'package:briefly/src/core/utils/ui_feedback.dart';
 import 'package:briefly/src/domain/repositories/profile_repository.dart';
 import 'package:briefly/src/domain/models/payment_method.dart';
 import '../profile/cubits/subscription/payment_methods_viewmodel.dart';
@@ -182,17 +183,26 @@ class PaymentMethodsView extends StatelessWidget {
                 BillingInfoRow(
                   label: 'Billing email',
                   value: 'ahmed@email.com',
-                  onTap: () {},
+                  onTap: () => UiFeedback.showComingSoon(
+                    context,
+                    'Edit billing email',
+                  ),
                 ),
                 BillingInfoRow(
                   label: 'Billing address',
                   value: 'Not set',
-                  onTap: () {},
+                  onTap: () => UiFeedback.showComingSoon(
+                    context,
+                    'Edit billing address',
+                  ),
                 ),
                 BillingInfoRow(
                   label: 'Tax ID',
                   value: 'Not set',
-                  onTap: () {},
+                  onTap: () => UiFeedback.showComingSoon(
+                    context,
+                    'Edit tax ID',
+                  ),
                   showDivider: false,
                 ),
               ],

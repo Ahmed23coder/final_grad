@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:briefly/src/core/utils/ui_feedback.dart';
 import '../../cubits/help_support/help_support_cubit.dart';
 import '../../cubits/help_support/help_support_state.dart';
 
@@ -411,31 +412,31 @@ class _ContactUsSection extends StatelessWidget {
           ),
           child: Column(
             children: [
-              _ContactRow(
+              const _ContactRow(
                 icon: LucideIcons.messageCircle,
                 title: 'Live Chat',
                 subtitle: 'Average wait: 2 min',
                 badgeText: 'Online',
-                baseColor: const Color(0xFF10B981), // emerald
-                badgeColor: const Color(0xFF6EE7B7), // emerald-300
+                baseColor: Color(0xFF10B981), // emerald
+                badgeColor: Color(0xFF6EE7B7), // emerald-300
               ),
               Divider(height: 1, color: Colors.white.withValues(alpha: 0.05)),
-              _ContactRow(
+              const _ContactRow(
                 icon: LucideIcons.mail,
                 title: 'Email Support',
                 subtitle: 'support@rasseny.ai',
                 badgeText: '24h',
-                baseColor: const Color(0xFFF59E0B), // amber
-                badgeColor: const Color(0xFFFCD34D), // amber-300
+                baseColor: Color(0xFFF59E0B), // amber
+                badgeColor: Color(0xFFFCD34D), // amber-300
               ),
               Divider(height: 1, color: Colors.white.withValues(alpha: 0.05)),
-              _ContactRow(
+              const _ContactRow(
                 icon: LucideIcons.atSign,
                 title: 'Twitter / X',
                 subtitle: '@RassenyAI',
                 badgeText: 'Public',
-                baseColor: const Color(0xFF0EA5E9), // sky
-                badgeColor: const Color(0xFF7DD3FC), // sky-300
+                baseColor: Color(0xFF0EA5E9), // sky
+                badgeColor: Color(0xFF7DD3FC), // sky-300
               ),
             ],
           ),
@@ -465,7 +466,10 @@ class _ContactRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () {},
+      onTap: () => UiFeedback.showSnack(
+        context,
+        'Opening $title…',
+      ),
       borderRadius: BorderRadius.circular(24),
       splashColor: Colors.white.withValues(alpha: 0.05),
       highlightColor: Colors.white.withValues(alpha: 0.03),
@@ -537,29 +541,29 @@ class _QuickLinksSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return const Row(
       children: [
         Expanded(
           child: _QuickLinkCard(
             title: 'User Guide',
             icon: LucideIcons.bookOpen,
-            color: const Color(0xFFA78BFA),
+            color: Color(0xFFA78BFA),
           ),
         ),
-        const SizedBox(width: 10),
+        SizedBox(width: 10),
         Expanded(
           child: _QuickLinkCard(
             title: 'What\'s New',
             icon: LucideIcons.zap,
-            color: const Color(0xFFF59E0B),
+            color: Color(0xFFF59E0B),
           ),
         ),
-        const SizedBox(width: 10),
+        SizedBox(width: 10),
         Expanded(
           child: _QuickLinkCard(
             title: 'Status Page',
             icon: LucideIcons.externalLink,
-            color: const Color(0xFF34D399),
+            color: Color(0xFF34D399),
           ),
         ),
       ],
@@ -826,9 +830,9 @@ class _FaqItemWidget extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 12),
-                      _FeedbackButton(icon: LucideIcons.thumbsUp),
+                      const _FeedbackButton(icon: LucideIcons.thumbsUp),
                       const SizedBox(width: 8),
-                      _FeedbackButton(icon: LucideIcons.thumbsDown),
+                      const _FeedbackButton(icon: LucideIcons.thumbsDown),
                     ],
                   ),
                 ],
@@ -852,7 +856,7 @@ class _FeedbackButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () {},
+      onTap: () => UiFeedback.showSnack(context, 'Thanks for your feedback!'),
       borderRadius: BorderRadius.circular(50),
       child: Container(
         width: 28,
@@ -1053,12 +1057,12 @@ class _SendFeedbackButton extends StatelessWidget {
           border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.25)),
         ),
         alignment: Alignment.center,
-        child: Row(
+        child: const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(LucideIcons.thumbsUp, size: 16, color: Color(0xFF34D399)),
-            const SizedBox(width: 8),
-            const Text(
+            Icon(LucideIcons.thumbsUp, size: 16, color: Color(0xFF34D399)),
+            SizedBox(width: 8),
+            Text(
               'Thanks for your feedback!',
               style: TextStyle(
                 fontFamily: 'Inter',

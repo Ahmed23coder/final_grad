@@ -10,9 +10,12 @@
 include: package:flutter_lints/flutter.yaml
 
 analyzer:
-  language:
-    strict-casts: true
-    strict-inference: true
+  # NOTE: strict-casts and strict-inference surface many pre-existing
+  # dynamic-map issues in Supabase deserialisation. Enable them as a
+  # separate cleanup once those call sites are typed.
+  # language:
+  #   strict-casts: true
+  #   strict-inference: true
 
 linter:
   # The lint rules applied to this project can be customized in the

@@ -8,6 +8,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/press_scale_animation.dart';
 import '../../../../core/utils/responsive_util.dart';
+import '../../../../core/utils/category_colors.dart';
 import '../../../../core/routes/app_router.dart';
 import '../../../../domain/models/hot_topic_filter.dart';
 import '../../../../domain/repositories/news_repository.dart';
@@ -19,6 +20,13 @@ import '../../../notifications/cubits/notifications_state.dart';
 import '../widgets/article_card.dart';
 import '../../../profile/cubits/profile_cubit.dart';
 import '../../../profile/cubits/profile_state.dart';
+
+String _greeting() {
+  final hour = DateTime.now().hour;
+  if (hour < 12) return 'Good morning';
+  if (hour < 18) return 'Good afternoon';
+  return 'Good evening';
+}
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -68,6 +76,14 @@ class _HomeScreenContentState extends State<_HomeScreenContent> {
                 toolbarHeight: context.scaleHeight(48),
                 backgroundColor: AppColors.background.withValues(alpha: 0.95),
                 elevation: 0,
+                scrolledUnderElevation: 0,
+                bottom: PreferredSize(
+                  preferredSize: const Size.fromHeight(1),
+                  child: Container(
+                    height: 1,
+                    color: Colors.white.withValues(alpha: 0.06),
+                  ),
+                ),
                 centerTitle: false,
                 title: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -274,7 +290,7 @@ class _HomeScreenContentState extends State<_HomeScreenContent> {
                                   Text(
                                     'Here is your news for today',
                                     style: AppTextStyles.caption(context).copyWith(
-                                      color: AppColors.silverPlaceholder,
+                                      color: Colors.white.withValues(alpha: 0.55),
                                       fontSize: context.scaleFontSize(14),
                                     ),
                                   ),
@@ -346,7 +362,9 @@ class _HomeScreenContentState extends State<_HomeScreenContent> {
                                             vertical: context.scaleHeight(6),
                                           ),
                                           decoration: BoxDecoration(
-                                            color: AppColors.accentBlue,
+                                            color: CategoryColors.forCategory(
+                                              featuredArticle.category,
+                                            ),
                                             borderRadius: BorderRadius.circular(
                                               50,
                                             ),
@@ -728,4 +746,9 @@ class _CircularIconButton extends StatelessWidget {
         child: Icon(
           icon,
           color: AppColors.foreground,
-          size: co
+          size: context.scaleWidth(20),
+        ),
+      ),
+    );
+  }
+}

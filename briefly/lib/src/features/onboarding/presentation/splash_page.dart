@@ -116,7 +116,7 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
     try {
       context.go(AppRouter.bootstrap);
     } catch (e, stack) {
-      showDialog(
+      await showDialog<void>(
         context: context,
         builder: (ctx) => AlertDialog(
           title: const Text('Navigation Error'),

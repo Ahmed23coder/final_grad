@@ -95,7 +95,7 @@ class PhoneInput extends StatelessWidget {
           enabledBorder: UnderlineInputBorder(
             borderSide: BorderSide(color: AppColors.silverBorder),
           ),
-          focusedBorder: UnderlineInputBorder(
+          focusedBorder: const UnderlineInputBorder(
             borderSide: BorderSide(color: AppColors.accentBlue),
           ),
           filled: false,

@@ -52,7 +52,7 @@ class NotificationsTopBar extends StatelessWidget {
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
+                    const Icon(
                       LucideIcons.bell,
                       color: AppColors.primaryAccent,
                       size: 16,

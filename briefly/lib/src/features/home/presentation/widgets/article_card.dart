@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/utils/category_colors.dart';
 import '../../../../core/utils/responsive_util.dart';
 
 class ArticleCard extends StatelessWidget {
@@ -71,7 +72,7 @@ class ArticleCard extends StatelessWidget {
                     Text(
                       category.toUpperCase(),
                       style: AppTextStyles.caption(context).copyWith(
-                        color: AppColors.accentBlue,
+                        color: CategoryColors.forCategory(category),
                         fontSize: context.scaleFontSize(10),
                         fontWeight: FontWeight.bold,
                         letterSpacing: 0.5,

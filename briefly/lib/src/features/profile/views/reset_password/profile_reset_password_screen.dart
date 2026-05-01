@@ -516,7 +516,7 @@ class _SubmitButton extends StatelessWidget {
             ),
             alignment: Alignment.center,
             child: state.isSaving
-                ? SizedBox(
+                ? const SizedBox(
                     height: 20,
                     width: 20,
                     child: CircularProgressIndicator(

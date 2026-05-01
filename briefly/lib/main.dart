@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -75,6 +77,26 @@ class BrieflyApp extends StatefulWidget {
 
 class _BrieflyAppState extends State<BrieflyApp> {
   late final router = AppRouter.createRouter(widget.prefs);
+  late final _textTheme = GoogleFonts.interTextTheme(
+    ThemeData.dark().textTheme,
+  );
+  StreamSubscription<AuthState>? _authSub;
+
+  @override
+  void initState() {
+    super.initState();
+    _authSub = Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+      if (data.event == AuthChangeEvent.signedOut) {
+        router.go(AppRouter.login);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _authSub?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -112,7 +134,7 @@ class _BrieflyAppState extends State<BrieflyApp> {
               surface: AppColors.background,
             ),
             scaffoldBackgroundColor: AppColors.background,
-            textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme),
+            textTheme: _textTheme,
             useMaterial3: true,
           ),
           routerConfig: router,

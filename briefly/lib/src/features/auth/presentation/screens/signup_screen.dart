@@ -174,7 +174,7 @@ class _SignupView extends StatelessWidget {
                             const TextSpan(
                               text: 'By creating an account you agree to our ',
                             ),
-                            TextSpan(
+                            const TextSpan(
                               text: 'Terms of Service',
                               style: TextStyle(
                                 color: AppColors.foreground,
@@ -182,7 +182,7 @@ class _SignupView extends StatelessWidget {
                               ),
                             ),
                             const TextSpan(text: ' and '),
-                            TextSpan(
+                            const TextSpan(
                               text: 'Privacy Policy',
                               style: TextStyle(
                                 color: AppColors.foreground,

@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -9,6 +10,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/responsive_util.dart';
+import '../../../../core/utils/ui_feedback.dart';
 import '../../../../domain/models/news_article.dart';
 import '../../../../domain/repositories/news_repository.dart';
 import '../../cubits/article_cubit.dart';
@@ -142,7 +144,10 @@ class _ArticleDetailViewState extends State<_ArticleDetailView> {
 
                       // Byline
                       GestureDetector(
-                        onTap: () {},
+                        onTap: () => UiFeedback.showSnack(
+                          context,
+                          'Source: ${article.source}',
+                        ),
                         child: Text(
                           'By ${article.source}',
                           style: AppTextStyles.caption(context).copyWith(
@@ -232,7 +237,7 @@ class _ArticleDetailViewState extends State<_ArticleDetailView> {
                               bgColor = AppColors.accentBlue.withValues(
                                 alpha: 0.08,
                               );
-                              leftBorder = Border(
+                              leftBorder = const Border(
                                 left: BorderSide(
                                   color: AppColors.accentBlue,
                                   width: 2,
@@ -345,7 +350,15 @@ class _ArticleDetailViewState extends State<_ArticleDetailView> {
                               _TopBarButton(
                                 icon: LucideIcons.share,
                                 isCircle: true,
-                                onTap: () {},
+                                onTap: () {
+                                  Clipboard.setData(
+                                    ClipboardData(text: article.title),
+                                  );
+                                  UiFeedback.showSnack(
+                                    context,
+                                    'Article copied to clipboard.',
+                                  );
+                                },
                               ),
                             ],
                           ),

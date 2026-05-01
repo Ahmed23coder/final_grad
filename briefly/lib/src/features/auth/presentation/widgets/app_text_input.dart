@@ -113,7 +113,7 @@ class _AppTextInputState extends State<AppTextInput> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: AppRadius.button,
-              borderSide: BorderSide(
+              borderSide: const BorderSide(
                 color: AppColors.primaryAccent,
                 width: AppRadius.buttonValue,
               ),
@@ -123,7 +123,7 @@ class _AppTextInputState extends State<AppTextInput> {
             errorStyle: const TextStyle(height: 0, fontSize: 0),
             errorBorder: OutlineInputBorder(
               borderRadius: AppRadius.button,
-              borderSide: BorderSide(
+              borderSide: const BorderSide(
                 color: AppColors.destructive,
                 width: AppRadius.buttonValue,
               ),

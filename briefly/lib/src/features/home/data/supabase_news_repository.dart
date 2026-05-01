@@ -1,3 +1,5 @@
+import 'dart:developer' as developer;
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../domain/models/news_article.dart';
 import '../../../domain/repositories/news_repository.dart';
@@ -199,9 +201,13 @@ class SupabaseNewsRepository implements NewsRepository {
       }
 
       return response.data['summary'] ?? 'Failed to generate summary';
-    } catch (e) {
-      // ignore: avoid_print
-      print('Error in summarizeArticle: $e');
+    } catch (e, st) {
+      developer.log(
+        'summarizeArticle failed',
+        name: 'news',
+        error: e,
+        stackTrace: st,
+      );
       return 'AI summarization unavailable at the moment.';
     }
   }
