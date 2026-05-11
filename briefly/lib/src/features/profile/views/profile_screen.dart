@@ -15,8 +15,20 @@ import 'package:briefly/src/core/widgets/avatar_fallback.dart';
 import 'package:briefly/src/domain/models/user_profile.dart';
 
 /// Clean Profile screen matching the explicit design system rules.
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Reload every time the screen is shown so counters stay fresh
+    context.read<ProfileCubit>().loadProfile();
+  }
 
   @override
   Widget build(BuildContext context) {

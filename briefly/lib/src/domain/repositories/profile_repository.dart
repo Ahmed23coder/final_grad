@@ -14,4 +14,5 @@ abstract class ProfileRepository {
   Future<void> setDefaultPaymentMethod(String id);
   Future<List<PurchaseRecord>> getPurchaseHistory();
   Future<void> upgradePlan(String planId);
+  Future<String> uploadAvatar(String filePath);
 }

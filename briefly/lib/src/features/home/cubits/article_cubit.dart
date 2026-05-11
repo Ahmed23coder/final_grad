@@ -15,6 +15,21 @@ class ArticleCubit extends Cubit<ArticleState> {
 
   ArticleCubit(this._repository) : super(const ArticleState());
 
+  Future<void> _seedSavedFlag(String articleId) async {
+    try {
+      final isSaved = await _repository.isArticleSaved(articleId);
+      if (isClosed) return;
+      emit(state.copyWith(isSaved: isSaved, clearError: true));
+    } catch (e, st) {
+      developer.log(
+        'isArticleSaved failed',
+        name: 'article',
+        error: e,
+        stackTrace: st,
+      );
+    }
+  }
+
   Future<void> _ensureTtsInitialized() async {
     if (_isTtsInitialized) return;
 
@@ -23,7 +38,7 @@ class ArticleCubit extends Cubit<ArticleState> {
       await _flutterTts.setSpeechRate(0.5);
       await _flutterTts.setVolume(1.0);
       await _flutterTts.setPitch(1.0);
-      
+
       _flutterTts.setCompletionHandler(() {
         _onParagraphComplete();
       });
@@ -48,11 +63,16 @@ class ArticleCubit extends Cubit<ArticleState> {
 
   Future<void> loadArticle(String id, {NewsArticle? initialArticle}) async {
     if (initialArticle != null) {
-      emit(state.copyWith(
-        isLoading: false,
-        article: initialArticle,
-        clearError: true,
-      ));
+      emit(
+        state.copyWith(
+          isLoading: false,
+          article: initialArticle,
+          clearError: true,
+        ),
+      );
+
+      unawaited(_seedSavedFlag(initialArticle.id));
+
       unawaited(
         _repository.addToReadingHistory(initialArticle).catchError((Object e) {
           developer.log(
@@ -69,10 +89,10 @@ class ArticleCubit extends Cubit<ArticleState> {
 
     try {
       final article = await _repository.getArticleById(id);
-      emit(state.copyWith(
-        isLoading: false,
-        article: article,
-      ));
+      emit(state.copyWith(isLoading: false, article: article));
+
+      unawaited(_seedSavedFlag(article.id));
+
       unawaited(
         _repository.addToReadingHistory(article).catchError((Object e) {
           developer.log(
@@ -83,11 +103,18 @@ class ArticleCubit extends Cubit<ArticleState> {
         }),
       );
     } catch (e, st) {
-      developer.log('Article load failed', name: 'article', error: e, stackTrace: st);
-      emit(state.copyWith(
-        isLoading: false,
-        error: 'Failed to load article. Please try again.',
-      ));
+      developer.log(
+        'Article load failed',
+        name: 'article',
+        error: e,
+        stackTrace: st,
+      );
+      emit(
+        state.copyWith(
+          isLoading: false,
+          error: 'Failed to load article. Please try again.',
+        ),
+      );
     }
   }
 
@@ -97,36 +124,64 @@ class ArticleCubit extends Cubit<ArticleState> {
     emit(state.copyWith(isSummarizing: true));
 
     try {
-      final summary = await _repository.summarizeArticle(state.article!.content);
-      emit(state.copyWith(
-        isSummarizing: false,
-        aiSummary: summary,
-      ));
+      final summary = await _repository.summarizeArticle(
+        state.article!.content,
+      );
+      emit(state.copyWith(isSummarizing: false, aiSummary: summary));
     } catch (e) {
-      emit(state.copyWith(
-        isSummarizing: false,
-        error: 'Failed to generate AI summary',
-      ));
+      emit(
+        state.copyWith(
+          isSummarizing: false,
+          error: 'Failed to generate AI summary',
+        ),
+      );
     }
   }
 
   void toggleSaved() {
-    emit(state.copyWith(isSaved: !state.isSaved));
+    final article = state.article;
+    if (article == null) return;
+
+    final nextSaved = !state.isSaved;
+    emit(state.copyWith(isSaved: nextSaved, clearError: true));
+
+    unawaited(() async {
+      try {
+        if (nextSaved) {
+          await _repository.saveArticle(article);
+        } else {
+          await _repository.removeArticles([article.id]);
+        }
+      } catch (e, st) {
+        developer.log(
+          'toggleSaved persistence failed',
+          name: 'article',
+          error: e,
+          stackTrace: st,
+        );
+        if (isClosed) return;
+        emit(
+          state.copyWith(
+            isSaved: !nextSaved,
+            error: 'Failed to update Vault. Please try again.',
+          ),
+        );
+      }
+    }());
   }
 
   void toggleReadAloud() {
     if (state.isReadingAloud) {
       _stopReading();
-      emit(state.copyWith(
-        isReadingAloud: false,
-        isPlaying: false,
-      ));
+      emit(state.copyWith(isReadingAloud: false, isPlaying: false));
     } else {
-      emit(state.copyWith(
-        isReadingAloud: true,
-        isPlaying: true,
-        currentParagraphIndex: 0,
-      ));
+      emit(
+        state.copyWith(
+          isReadingAloud: true,
+          isPlaying: true,
+          currentParagraphIndex: 0,
+        ),
+      );
       _startReading();
     }
   }
@@ -153,10 +208,7 @@ class ArticleCubit extends Cubit<ArticleState> {
 
   void closeReadAloud() {
     _stopReading();
-    emit(state.copyWith(
-      isReadingAloud: false,
-      isPlaying: false,
-    ));
+    emit(state.copyWith(isReadingAloud: false, isPlaying: false));
   }
 
   void togglePlayPause() {
@@ -180,14 +232,18 @@ class ArticleCubit extends Cubit<ArticleState> {
 
   void previousParagraph() {
     if (state.currentParagraphIndex > 0) {
-      emit(state.copyWith(currentParagraphIndex: state.currentParagraphIndex - 1));
+      emit(
+        state.copyWith(currentParagraphIndex: state.currentParagraphIndex - 1),
+      );
       if (state.isPlaying) _speakCurrentParagraph();
     }
   }
 
   void nextParagraph(int totalParagraphs) {
     if (state.currentParagraphIndex < totalParagraphs - 1) {
-      emit(state.copyWith(currentParagraphIndex: state.currentParagraphIndex + 1));
+      emit(
+        state.copyWith(currentParagraphIndex: state.currentParagraphIndex + 1),
+      );
       if (state.isPlaying) _speakCurrentParagraph();
     }
   }

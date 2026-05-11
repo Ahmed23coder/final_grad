@@ -14,6 +14,8 @@ class EditProfileState extends Equatable {
 
   final bool isSaving;
   final bool isSaved;
+  final bool isUploadingAvatar;
+  final String avatarUrl;
 
   const EditProfileState({
     this.fullName = '',
@@ -28,6 +30,8 @@ class EditProfileState extends Equatable {
     this.membership = 'Free Member',
     this.isSaving = false,
     this.isSaved = false,
+    this.isUploadingAvatar = false,
+    this.avatarUrl = '',
   });
 
   EditProfileState copyWith({
@@ -43,6 +47,8 @@ class EditProfileState extends Equatable {
     String? membership,
     bool? isSaving,
     bool? isSaved,
+    bool? isUploadingAvatar,
+    String? avatarUrl,
   }) {
     return EditProfileState(
       fullName: fullName ?? this.fullName,
@@ -57,6 +63,8 @@ class EditProfileState extends Equatable {
       membership: membership ?? this.membership,
       isSaving: isSaving ?? this.isSaving,
       isSaved: isSaved ?? this.isSaved,
+      isUploadingAvatar: isUploadingAvatar ?? this.isUploadingAvatar,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
     );
   }
 
@@ -74,5 +82,7 @@ class EditProfileState extends Equatable {
         membership,
         isSaving,
         isSaved,
+        isUploadingAvatar,
+        avatarUrl,
       ];
 }

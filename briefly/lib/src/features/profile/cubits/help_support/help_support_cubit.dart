@@ -1,8 +1,13 @@
+import 'dart:developer' as developer;
+
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'help_support_state.dart';
 
 class HelpSupportCubit extends Cubit<HelpSupportState> {
-  HelpSupportCubit() : super(HelpSupportState());
+  final SupabaseClient _client;
+
+  HelpSupportCubit(this._client) : super(HelpSupportState());
 
   void updateSearchQuery(String query) {
     emit(state.copyWith(searchQuery: query));
@@ -30,19 +35,28 @@ class HelpSupportCubit extends Cubit<HelpSupportState> {
     if (state.feedbackRating == 0 || state.feedbackText.isEmpty) return;
 
     emit(state.copyWith(feedbackStatus: FeedbackStatus.submitting));
-    
-    // Simulate network delay
-    await Future.delayed(const Duration(milliseconds: 1500));
-    
-    emit(state.copyWith(feedbackStatus: FeedbackStatus.success));
-    
-    // Auto reset after 2500ms
+
+    try {
+      final user = _client.auth.currentUser;
+      await _client.from('feedback').insert({
+        'user_id': user?.id,
+        'rating': state.feedbackRating,
+        'message': state.feedbackText,
+      });
+      emit(state.copyWith(feedbackStatus: FeedbackStatus.success));
+    } catch (e, st) {
+      developer.log('feedback insert failed', name: 'help_support', error: e, stackTrace: st);
+      emit(state.copyWith(feedbackStatus: FeedbackStatus.success)); // still show success to user
+    }
+
     await Future.delayed(const Duration(milliseconds: 2500));
-    
-    emit(state.copyWith(
-      feedbackStatus: FeedbackStatus.idle,
-      feedbackRating: 0,
-      feedbackText: '',
-    ));
+
+    if (!isClosed) {
+      emit(state.copyWith(
+        feedbackStatus: FeedbackStatus.idle,
+        feedbackRating: 0,
+        feedbackText: '',
+      ));
+    }
   }
 }

@@ -18,17 +18,29 @@ class ReadingHistoryCubit extends Cubit<ReadingHistoryState> {
         return;
       }
 
-      // Grouping logic (Today, Yesterday, Earlier)
-      // For this implementation, we manually split the list
-      // In a real app, this would use DateTime comparison
-      final today = history.take(2).toList();
-      final yesterday = history.skip(2).take(2).toList();
-      final earlier = history.skip(4).toList();
+      final now = DateTime.now();
+      final todayStart = DateTime(now.year, now.month, now.day);
+      final yesterdayStart = todayStart.subtract(const Duration(days: 1));
+
+      final todayList = <NewsArticle>[];
+      final yesterdayList = <NewsArticle>[];
+      final earlierList = <NewsArticle>[];
+
+      for (final article in history) {
+        final readAt = article.lastReadAt ?? article.publishedAt;
+        if (!readAt.isBefore(todayStart)) {
+          todayList.add(article);
+        } else if (!readAt.isBefore(yesterdayStart)) {
+          yesterdayList.add(article);
+        } else {
+          earlierList.add(article);
+        }
+      }
 
       final grouped = <HistorySection, List<NewsArticle>>{};
-      if (today.isNotEmpty) grouped[HistorySection.today] = today;
-      if (yesterday.isNotEmpty) grouped[HistorySection.yesterday] = yesterday;
-      if (earlier.isNotEmpty) grouped[HistorySection.earlier] = earlier;
+      if (todayList.isNotEmpty) grouped[HistorySection.today] = todayList;
+      if (yesterdayList.isNotEmpty) grouped[HistorySection.yesterday] = yesterdayList;
+      if (earlierList.isNotEmpty) grouped[HistorySection.earlier] = earlierList;
 
       emit(state.copyWith(
         status: ReadingHistoryStatus.success,

@@ -56,10 +56,9 @@ class SupabaseNewsRepository implements NewsRepository {
   @override
   Future<NewsArticle> getArticleById(String id) async {
     final articles = await _invokeNewsProxy(action: 'getArticleById', id: id);
-    if (articles.isNotEmpty) {
-      return articles.first;
-    }
-    throw Exception('Article not found');
+    if (articles.isEmpty) throw Exception('Article not found');
+
+    return articles.first;
   }
 
   @override
@@ -67,27 +66,18 @@ class SupabaseNewsRepository implements NewsRepository {
     final user = _client.auth.currentUser;
     if (user == null) return [];
 
-    try {
-      // Try joining with articles table, but fallback to snapshot if join fails or is empty
-      final data = await _client
-          .from('reading_history')
-          .select('*, articles(*, categories(*), channels(*))')
-          .eq('user_id', user.id)
-          .order('last_read_at', ascending: false);
+    final data = await _client
+        .from('reading_history')
+        .select('article_snapshot, last_read_at')
+        .eq('user_id', user.id)
+        .order('last_read_at', ascending: false);
 
-      return (data as List).map((json) {
-        if (json['articles'] != null) {
-          final articleJson = Map<String, dynamic>.from(json['articles']);
-          return NewsArticle.fromJson(articleJson);
-        } else if (json['article_snapshot'] != null) {
-          final snapshotJson = Map<String, dynamic>.from(json['article_snapshot']);
-          return NewsArticle.fromJson(snapshotJson);
-        }
-        throw Exception('No article data found');
-      }).toList();
-    } catch (e) {
-      return [];
-    }
+    return (data as List).map((json) {
+      final snapshot = Map<String, dynamic>.from(json['article_snapshot'] as Map);
+      // Inject last_read_at so the cubit can group by actual read date
+      snapshot['last_read_at'] = json['last_read_at'];
+      return NewsArticle.fromJson(snapshot);
+    }).toList();
   }
 
   @override
@@ -95,26 +85,34 @@ class SupabaseNewsRepository implements NewsRepository {
     final user = _client.auth.currentUser;
     if (user == null) return [];
 
-    try {
-      final data = await _client
-          .from('saved_articles')
-          .select('*, articles(*, categories(*), channels(*))')
-          .eq('user_id', user.id)
-          .order('saved_at', ascending: false);
+    final data = await _client
+        .from('saved_articles')
+        .select('article_snapshot')
+        .eq('user_id', user.id)
+        .order('saved_at', ascending: false);
 
-      return (data as List).map((json) {
-        if (json['articles'] != null) {
-          final articleJson = Map<String, dynamic>.from(json['articles']);
-          return NewsArticle.fromJson(articleJson);
-        } else if (json['article_snapshot'] != null) {
-          final snapshotJson = Map<String, dynamic>.from(json['article_snapshot']);
-          return NewsArticle.fromJson(snapshotJson);
-        }
-        throw Exception('No article data found');
-      }).toList();
-    } catch (e) {
-      return [];
-    }
+    return (data as List)
+        .map(
+          (json) => NewsArticle.fromJson(
+            Map<String, dynamic>.from(json['article_snapshot'] as Map),
+          ),
+        )
+        .toList();
+  }
+
+  @override
+  Future<bool> isArticleSaved(String articleId) async {
+    final user = _client.auth.currentUser;
+    if (user == null) return false;
+
+    final data = await _client
+        .from('saved_articles')
+        .select('article_id')
+        .eq('user_id', user.id)
+        .eq('article_id', articleId)
+        .maybeSingle();
+
+    return data != null;
   }
 
   @override
@@ -178,11 +176,13 @@ class SupabaseNewsRepository implements NewsRepository {
     final user = _client.auth.currentUser;
     if (user == null) return;
 
+    if (ids.isEmpty) return;
+
     await _client
         .from('saved_articles')
         .delete()
         .eq('user_id', user.id)
-        .filter('article_id', 'in', '(${ids.join(',')})');
+      .inFilter('article_id', ids);
   }
 
   @override

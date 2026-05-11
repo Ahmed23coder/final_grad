@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'package:briefly/src/core/theme/app_colors.dart';
@@ -198,12 +201,23 @@ class _AvatarSection extends StatelessWidget {
             children: [
               BlocBuilder<EditProfileCubit, EditProfileState>(
                 buildWhen: (a, b) =>
-                    a.fullName != b.fullName || a.email != b.email,
+                    a.fullName != b.fullName ||
+                    a.email != b.email ||
+                    a.avatarUrl != b.avatarUrl ||
+                    a.isUploadingAvatar != b.isUploadingAvatar,
                 builder: (context, state) {
+                  if (state.isUploadingAvatar) {
+                    return SizedBox(
+                      width: context.scaleWidth(96),
+                      height: context.scaleWidth(96),
+                      child: const CircularProgressIndicator(),
+                    );
+                  }
                   return AvatarFallback(
                     name: state.fullName.isNotEmpty
                         ? state.fullName
                         : state.email,
+                    avatarUrl: state.avatarUrl.isNotEmpty ? state.avatarUrl : null,
                     size: context.scaleWidth(96),
                     borderColor:
                         const Color(0xFFC0C0C0).withValues(alpha: 0.3),
@@ -215,8 +229,15 @@ class _AvatarSection extends StatelessWidget {
                 bottom: -context.scaleHeight(4), // -bottom-1
                 right: -context.scaleWidth(4), // -right-1
                 child: PressScaleAnimation(
-                  onTap: () {
-                    // Logic to trigger file input
+                  onTap: () async {
+                    final picker = ImagePicker();
+                    final picked = await picker.pickImage(
+                      source: ImageSource.gallery,
+                      imageQuality: 85,
+                    );
+                    if (picked != null && context.mounted) {
+                      unawaited(context.read<EditProfileCubit>().uploadAvatar(picked.path));
+                    }
                   },
                   scaleOnPress: 0.95,
                   child: Container(

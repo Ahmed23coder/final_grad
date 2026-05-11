@@ -51,13 +51,17 @@ class _FakeNewsRepository implements NewsRepository {
   Future<void> removeArticles(List<String> ids) async {}
 
   @override
+  Future<bool> isArticleSaved(String articleId) async => false;
+
+  @override
   Future<NewsArticle?> fetchFeaturedArticle({String? category}) async {
     return featured;
   }
 
   @override
   Future<List<NewsArticle>> fetchTrendingArticles({String? category}) async {
-    return trending;
+    final items = <NewsArticle>[if (featured != null) featured!, ...trending];
+    return items;
   }
 
   @override
@@ -126,4 +130,3 @@ void main() {
     );
   });
 }
-

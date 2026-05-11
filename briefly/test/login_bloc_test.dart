@@ -20,25 +20,37 @@ void main() {
       'emits loading then success when login succeeds',
       build: () {
         when(
-          () => repo.login(email: any(named: 'email'), password: any(named: 'password')),
+          () => repo.login(
+            email: any(named: 'email'),
+            password: any(named: 'password'),
+          ),
         ).thenAnswer((_) async {});
         return LoginBloc(authRepository: repo);
       },
       act: (bloc) {
         bloc.add(const LoginEmailChanged('a@b.com'));
-        bloc.add(const LoginPasswordChanged('123456'));
+        bloc.add(const LoginPasswordChanged('Abcdef1!'));
         bloc.add(const LoginSubmitted());
       },
       expect: () => [
         isA<LoginState>().having((s) => s.email, 'email', 'a@b.com'),
-        isA<LoginState>().having((s) => s.password, 'password', '123456'),
-        isA<LoginState>().having((s) => s.status, 'status', LoginStatus.loading),
-        isA<LoginState>().having((s) => s.status, 'status', LoginStatus.success),
+        isA<LoginState>().having((s) => s.password, 'password', 'Abcdef1!'),
+        isA<LoginState>().having(
+          (s) => s.status,
+          'status',
+          LoginStatus.loading,
+        ),
+        isA<LoginState>().having(
+          (s) => s.status,
+          'status',
+          LoginStatus.success,
+        ),
       ],
       verify: (_) {
-        verify(() => repo.login(email: 'a@b.com', password: '123456')).called(1);
+        verify(
+          () => repo.login(email: 'a@b.com', password: 'Abcdef1!'),
+        ).called(1);
       },
     );
   });
 }
-

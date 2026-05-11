@@ -1,4 +1,5 @@
 import 'dart:developer' as developer;
+import 'dart:io';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../domain/models/user_profile.dart';
@@ -82,6 +83,16 @@ class SupabaseProfileRepository implements ProfileRepository {
       final savedArticlesResponse = results[2] as List;
       final subscriptionData = results[3] as Map<String, dynamic>?;
       final interestsData = results[4] as List;
+
+      // Fetch ai_summaries count separately so a failure doesn't break other counters
+      int aiSummariesCount = 0;
+      try {
+        final aiSummariesResponse = await _client
+            .from('ai_summaries')
+            .select('id')
+            .eq('user_id', user.id);
+        aiSummariesCount = (aiSummariesResponse as List).length;
+      } catch (_) {}
       
       final interests = interestsData
           .map((item) => (item['categories'] as Map)['name'] as String)
@@ -102,7 +113,7 @@ class SupabaseProfileRepository implements ProfileRepository {
         subscriptionPlanId: subscriptionData?['tier'] ?? 'free',
         articlesRead: readingHistoryResponse.length,
         vaultSaved: savedArticlesResponse.length,
-        aiSummaries: 0, // Placeholder
+        aiSummaries: aiSummariesCount,
         selectedInterests: interests,
         twitter: data['twitter_handle'] ?? '',
         instagram: data['instagram_handle'] ?? '',
@@ -252,6 +263,29 @@ class SupabaseProfileRepository implements ProfileRepository {
         status: json['status'],
       );
     }).toList();
+  }
+
+  @override
+  Future<String> uploadAvatar(String filePath) async {
+    final user = _client.auth.currentUser;
+    if (user == null) throw Exception('Not authenticated');
+
+    final file = File(filePath);
+    final ext = filePath.split('.').last;
+    final path = '${user.id}/avatar.$ext';
+
+    await _client.storage.from('avatars').upload(
+      path,
+      file,
+      fileOptions: const FileOptions(upsert: true),
+    );
+
+    final publicUrl = _client.storage.from('avatars').getPublicUrl(path);
+
+    // Persist the new URL to the profiles table and auth metadata
+    await saveProfile(currentProfile.copyWith(avatarUrl: publicUrl));
+
+    return publicUrl;
   }
 
   @override

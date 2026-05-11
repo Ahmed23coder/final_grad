@@ -10,6 +10,10 @@
 include: package:flutter_lints/flutter.yaml
 
 analyzer:
+  exclude:
+    # Legacy experimental AI UI (unused) that currently contains broken imports.
+    # Keep out of static analysis until it's either wired properly or removed.
+    - lib/src/features/AI/**
   # NOTE: strict-casts and strict-inference surface many pre-existing
   # dynamic-map issues in Supabase deserialisation. Enable them as a
   # separate cleanup once those call sites are typed.

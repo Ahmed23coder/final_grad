@@ -1,3 +1,5 @@
+import 'dart:developer' as developer;
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'edit_profile_state.dart';
 import 'package:briefly/src/domain/repositories/profile_repository.dart';
@@ -17,6 +19,7 @@ class EditProfileCubit extends Cubit<EditProfileState> {
           website: _repository.currentProfile.website,
           selectedInterests: _repository.currentProfile.selectedInterests,
           membership: _repository.currentProfile.membership,
+          avatarUrl: _repository.currentProfile.avatarUrl,
         ));
 
   void updateFullName(String value) => emit(state.copyWith(fullName: value));
@@ -37,6 +40,17 @@ class EditProfileCubit extends Cubit<EditProfileState> {
       list.add(interest);
     }
     emit(state.copyWith(selectedInterests: list));
+  }
+
+  Future<void> uploadAvatar(String filePath) async {
+    emit(state.copyWith(isUploadingAvatar: true));
+    try {
+      final url = await _repository.uploadAvatar(filePath);
+      emit(state.copyWith(isUploadingAvatar: false, avatarUrl: url));
+    } catch (e, st) {
+      developer.log('avatar upload failed', name: 'edit_profile', error: e, stackTrace: st);
+      emit(state.copyWith(isUploadingAvatar: false));
+    }
   }
 
   Future<void> saveProfile() async {

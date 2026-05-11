@@ -113,6 +113,7 @@ serve(async (req) => {
           publishedAt: a.publishedAt,
           source: a.source?.name || "GNews",
           content: a.description || a.title || "No description provided.",
+          url: a.url || "",
           trendingScore: isHot ? 9.8 - (i * 0.1) : 8.5 - (i * 0.2),
         };
       });
@@ -123,6 +124,88 @@ serve(async (req) => {
 
       return processed;
     };
+
+    // --- ACTION: Scrape full article content ---
+    if (action === "scrapeArticle") {
+      const { url } = body;
+      if (!url) return new Response(JSON.stringify({ content: "" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
+      try {
+        const res = await fetch(url, {
+          headers: { "User-Agent": "Mozilla/5.0 (compatible; Briefly/1.0)" },
+          signal: AbortSignal.timeout(8000),
+        });
+        const html = await res.text();
+
+        // Extract text from <p> tags
+        const paragraphs: string[] = [];
+        const pRegex = /<p[^>]*>([\s\S]*?)<\/p>/gi;
+        let match;
+        while ((match = pRegex.exec(html)) !== null) {
+          const text = match[1]
+            .replace(/<[^>]+>/g, '')       // strip inner tags
+            .replace(/&amp;/g, '&')
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
+            .replace(/&quot;/g, '"')
+            .replace(/&#39;/g, "'")
+            .replace(/&nbsp;/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+          if (text.length > 40) paragraphs.push(text);  // skip nav/caption noise
+        }
+
+        const fullContent = paragraphs.join('\n\n');
+        return new Response(
+          JSON.stringify({ content: fullContent.length > 200 ? fullContent : "" }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      } catch (e) {
+        return new Response(JSON.stringify({ content: "" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+    }
+
+    // --- ACTION: Get article by ID (find in cache + scrape full content) ---
+    if (action === "getArticleById" && id) {
+      // Search all cache entries for the article
+      const { data: allCaches } = await supabase.from("news_cache").select("data");
+      let foundArticle: any = null;
+      for (const cache of (allCaches || [])) {
+        const articles = cache.data as any[];
+        const match = articles?.find((a: any) => a.id === id);
+        if (match) { foundArticle = match; break; }
+      }
+
+      if (!foundArticle) {
+        return new Response(JSON.stringify([]), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
+      // Scrape full content if URL available
+      if (foundArticle.url) {
+        try {
+          const res = await fetch(foundArticle.url, {
+            headers: { "User-Agent": "Mozilla/5.0 (compatible; Briefly/1.0)" },
+            signal: AbortSignal.timeout(8000),
+          });
+          const html = await res.text();
+          const paragraphs: string[] = [];
+          const pRegex = /<p[^>]*>([\s\S]*?)<\/p>/gi;
+          let match;
+          while ((match = pRegex.exec(html)) !== null) {
+            const text = match[1]
+              .replace(/<[^>]+>/g, '')
+              .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+              .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&nbsp;/g, ' ')
+              .replace(/\s+/g, ' ').trim();
+            if (text.length > 40) paragraphs.push(text);
+          }
+          const fullContent = paragraphs.join('\n\n');
+          if (fullContent.length > 200) foundArticle = { ...foundArticle, content: fullContent };
+        } catch (e) { /* use original content */ }
+      }
+
+      return new Response(JSON.stringify([foundArticle]), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
     const isHot = body.isHot === true;
     const category = targetCategoryParam || "All";

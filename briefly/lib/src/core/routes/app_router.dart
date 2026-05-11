@@ -17,8 +17,12 @@ import '../../features/onboarding/presentation/onboarding_page.dart';
 import '../../features/onboarding/presentation/splash_page.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/home/presentation/screens/article_detail_screen.dart';
+import '../../features/search/presentation/search_screen.dart';
+import '../../features/ai_tools/presentation/fact_check_screen.dart';
+import '../../features/ai_tools/presentation/summarize_screen.dart';
 import '../../features/notifications/views/notifications_screen.dart';
 import '../../features/profile/views/profile_screen.dart';
+import '../../features/saved/presentation/saved_screen.dart';
 import '../../features/profile/views/reset_password/profile_reset_password_screen.dart';
 import '../../features/profile/views/edit/edit_profile_screen.dart';
 import '../../features/profile/views/language_screen.dart';
@@ -191,12 +195,7 @@ class AppRouter {
               routes: [
                 GoRoute(
                   path: search,
-                  builder: (context, state) => const Center(
-                    child: Text(
-                      'Search - Coming Soon',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
+                  builder: (context, state) => const SearchScreen(),
                 ),
               ],
             ),
@@ -205,12 +204,7 @@ class AppRouter {
               routes: [
                 GoRoute(
                   path: summarize,
-                  builder: (context, state) => const Center(
-                    child: Text(
-                      'Summarize - Coming Soon',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
+                  builder: (context, state) => const SummarizeScreen(),
                 ),
               ],
             ),
@@ -219,12 +213,7 @@ class AppRouter {
               routes: [
                 GoRoute(
                   path: factCheck,
-                  builder: (context, state) => const Center(
-                    child: Text(
-                      'Fact Check - Coming Soon',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
+                  builder: (context, state) => const FactCheckScreen(),
                 ),
               ],
             ),
@@ -233,12 +222,7 @@ class AppRouter {
               routes: [
                 GoRoute(
                   path: vault,
-                  builder: (context, state) => const Center(
-                    child: Text(
-                      'Vault - Coming Soon',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
+                  builder: (context, state) => const SavedScreen(isTab: true),
                 ),
               ],
             ),
@@ -311,7 +295,8 @@ class AppRouter {
         GoRoute(
           path: editProfile,
           builder: (context, state) => BlocProvider(
-            create: (context) => EditProfileCubit(context.read<ProfileRepository>()),
+            create: (context) =>
+                EditProfileCubit(context.read<ProfileRepository>()),
             child: const EditProfileScreen(),
           ),
         ),
@@ -333,7 +318,7 @@ class AppRouter {
         GoRoute(
           path: helpSupport,
           builder: (context, state) => BlocProvider(
-            create: (context) => HelpSupportCubit(),
+            create: (context) => HelpSupportCubit(Supabase.instance.client),
             child: const HelpSupportScreen(),
           ),
         ),

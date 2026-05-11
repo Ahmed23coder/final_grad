@@ -9,6 +9,8 @@ class NewsArticle extends Equatable {
   final String source;
   final String content;
   final double trendingScore;
+  final DateTime? lastReadAt;
+  final String url;
 
   const NewsArticle({
     required this.id,
@@ -19,6 +21,8 @@ class NewsArticle extends Equatable {
     required this.source,
     required this.content,
     this.trendingScore = 0.0,
+    this.lastReadAt,
+    this.url = '',
   });
 
   String? get thumbnailUrl => urlToImage.isNotEmpty ? urlToImage : null;
@@ -58,6 +62,8 @@ class NewsArticle extends Equatable {
       source: sourceName,
       content: json['content']?.toString() ?? '',
       trendingScore: (json['trendingScore'] ?? json['view_count'] ?? 0).toDouble(),
+      lastReadAt: DateTime.tryParse(json['last_read_at']?.toString() ?? ''),
+      url: json['url']?.toString() ?? '',
     );
   }
 
@@ -71,6 +77,7 @@ class NewsArticle extends Equatable {
       'source': {'name': source},
       'content': content,
       'trendingScore': trendingScore,
+      'url': url,
     };
   }
 
@@ -83,6 +90,8 @@ class NewsArticle extends Equatable {
     String? source,
     String? content,
     double? trendingScore,
+    DateTime? lastReadAt,
+    String? url,
   }) {
     return NewsArticle(
       id: id ?? this.id,
@@ -93,6 +102,8 @@ class NewsArticle extends Equatable {
       source: source ?? this.source,
       content: content ?? this.content,
       trendingScore: trendingScore ?? this.trendingScore,
+      lastReadAt: lastReadAt ?? this.lastReadAt,
+      url: url ?? this.url,
     );
   }
 
@@ -106,5 +117,7 @@ class NewsArticle extends Equatable {
         source,
         content,
         trendingScore,
+        lastReadAt,
+        url,
       ];
 }

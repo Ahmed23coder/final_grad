@@ -19,6 +19,9 @@ abstract class NewsRepository {
   /// Fetches the user's saved articles (Saved).
   Future<List<NewsArticle>> getSavedArticles();
 
+  /// Checks whether an article is saved in the user's Vault.
+  Future<bool> isArticleSaved(String articleId);
+
   /// Adds an article to the user's reading history.
   Future<void> addToReadingHistory(NewsArticle article);
 
